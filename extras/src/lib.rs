@@ -6,7 +6,6 @@ use forest_cid::Cid;
 use forest_encoding::tuple::*;
 use forest_vm::Serialized;
 use lazy_static::lazy_static;
-
 use num_derive::FromPrimitive;
 
 /// Methods init

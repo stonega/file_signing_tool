@@ -22,7 +22,8 @@
   ],
   "dependencies": {
     "@ledgerhq/hw-transport-webusb": "^5.19.0",
-    "@zondax/filecoin-signing-tools": "^0"
+    "@zondax/filecoin-signing-tools": "^0",
+    "esm": "^3.2.25"
   },
   "devDependencies": {
     "copy-webpack-plugin": "^5.1.1",

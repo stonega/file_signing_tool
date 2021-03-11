@@ -5,9 +5,10 @@ mod macros;
 
 mod error;
 mod extended_key;
-
+use serde::{Deserialize, Serialize, Serializer};
 use ffi_support::{call_with_result, ExternError};
-use filecoin_signer::{key_derive, ExtendedKey};
+use filecoin_signer::{key_derive, transaction_sign_ffi, ExtendedKey, PrivateKey};
+use filecoin_signer::api::{MessageParams, SignedMessageAPI, UnsignedMessageAPI};
 
 create_fn!(filecoin_signer_key_derive|Java_ch_zondax_FilecoinSigner_keyDerive: (
     mnemonic: str_arg_ty!(),
@@ -24,6 +25,22 @@ create_fn!(filecoin_signer_key_derive|Java_ch_zondax_FilecoinSigner_keyDerive: (
             get_string_ref(&path),
             get_string_ref(&password),
         )?)
+    })
+});
+
+create_fn!(filecoin_signer_sign_message|Java_ch_zondax_FilecoinSigner_Sign_Message: (
+    message: str_arg_ty!(),
+    privateKey: str_arg_ty!(),
+    error: &mut ExternError
+) -> ptr!(String), |etc| {
+    call_with_result(error, || -> Result<String, ExternError> {
+        let message = get_string!(etc, message)?;
+        let privateKey = get_string!(etc, privateKey)?;
+        let signed_message = transaction_sign_ffi(
+             &get_string_ref(&message).to_string(),
+             &get_string_ref(&privateKey).to_string(),
+        )?;
+        Ok(serde_json::to_string(&signed_message).unwrap())
     })
 });
 

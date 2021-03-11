@@ -5,8 +5,8 @@ const secp256k1 = require("secp256k1");
 const BN = require("bn.js");
 const { MethodInit, MethodPaych } = require("./methods");
 const lowercaseKeys = require("lowercase-keys");
-
 const ExtendedKey = require("./extendedkey");
+const wasm = import("../../pkg/filecoin_signer_wasm_bg.js");
 const {
   getDigest,
   getCoinTypeFromPath,
@@ -425,6 +425,29 @@ function createVoucher(
 
   return serializedVoucher.toString("base64");
 }
+
+const signed = {
+  "message": {
+    "to": "t1kj2fedndezlcawu4nxr6pqisiwz2asgonsy3tny",
+    "from": "t3ryp7nacthkhye7dpfzx3fv3btmj5xnegc5v4yqojsaxnhld4jxdqvrsg22qjsuuy34gnqs4luzb2kfvmmk3q",
+    "nonce": 0,
+    "value": "100000",
+    "gaslimit": 2568147,
+    "gasfeecap": "101685",
+    "gaspremium": "100631",
+    "method": 0,
+    "params": ""
+  },
+  "signature": {
+    "type": 2,
+    "data": "kzQBZOIN9WPddgINaxpCNJ+NxgdxEQqecB+Id1gOKmj5t7DaZwgfswIrwWSgaj1xDfdGzdT20LTjJrcWwxAoDRdX2iAlTEr5txcmtpdIvPT3sC6RKxjG7kc26AWPiumZ"
+  }
+} 
+
+wasm.then(m => {
+  console.log(m.getCid(signed))
+})
+
 
 module.exports = {
   generateMnemonic,

@@ -3,7 +3,7 @@ import 'package:ffi/ffi.dart';
 import 'dart:io';
 
 final DynamicLibrary filecoin = Platform.isAndroid
-    ? DynamicLibrary.open("libfilecoin_signer_ffi.so")
+    ? DynamicLibrary.open("libfilecoin_lib_ffi.so")
     : DynamicLibrary.process();
 
 class Filecoin {
@@ -45,6 +45,11 @@ class Filecoin {
   static final void Function(Pointer<Utf8>) stringFree =
     filecoin
       .lookup<NativeFunction<Void Function(Pointer<Utf8>)>>("filecoin_signer_string_free")
+      .asFunction();
+
+  static final Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Utf8>) signMessage =
+    filecoin
+      .lookup<NativeFunction<Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Utf8>)>>("filecoin_signer_sign_message")
       .asFunction();
 }
 

@@ -7,10 +7,10 @@ use std::str::FromStr;
 use bip39::{Language, MnemonicType, Seed};
 use bls_signatures::Serialize;
 use forest_address::{Address, BLSPublicKey, Network, Protocol};
-use forest_cid::{multihash::MultihashDigest, Cid, Code::Blake2b256, Code::Identity, Codec};
+use forest_cid::{multihash::MultihashDigest, Cid, Code::Identity, Code, *};
 use forest_encoding::blake2b_256;
 use forest_encoding::{from_slice, to_vec};
-use forest_message::SignedMessage;
+use forest_message::{SignedMessage, signed_message};
 use num_bigint_chainsafe::BigInt;
 use num_traits::FromPrimitive;
 use rayon::prelude::*;
@@ -35,7 +35,6 @@ pub mod error;
 pub mod extended_key;
 pub mod signature;
 pub mod utils;
-
 /// Mnemonic string
 pub struct Mnemonic(pub String);
 
@@ -369,7 +368,6 @@ pub fn transaction_sign(
     private_key: &PrivateKey,
 ) -> Result<SignedMessageAPI, SignerError> {
     let signature = transaction_sign_raw(unsigned_message, private_key)?;
-
     let signed_message = SignedMessageAPI {
         message: unsigned_message.to_owned(),
         signature: SignatureAPI::from(&signature),
@@ -377,6 +375,15 @@ pub fn transaction_sign(
 
     Ok(signed_message)
 }
+
+pub fn transaction_sign_ffi(msg: &String, privKey: &String) 
+  -> Result<SignedMessageAPI, SignerError>{
+         let private_key = PrivateKey::try_from((*privKey).clone()).expect("Erros");
+         let message = serde_json::from_str(msg).expect("Error");
+         let signed_message = transaction_sign(&message, &private_key)?;
+
+    Ok(signed_message)
+     }
 
 fn verify_secp256k1_signature(
     signature: &SignatureSECP256K1,
@@ -553,7 +560,7 @@ pub fn create_multisig(
     .map_err(|err| SignerError::GenericString(err.to_string()))?;
 
     let message_params_multisig = ExecParams {
-        code_cid: Cid::new_v1(Codec::Raw, Identity.digest(b"fil/2/multisig")),
+        code_cid: Cid::new_v1(RAW, Code::Identity.digest(b"fil/2/multisig")),
         constructor_params: serialized_constructor_params,
     };
 
@@ -792,7 +799,7 @@ pub fn create_pymtchan(
             .map_err(|err| SignerError::GenericString(err.to_string()))?;
 
     let message_params_create_pymtchan = ExecParams {
-        code_cid: Cid::new_v1(Codec::Raw, Identity.digest(b"fil/2/paymentchannel")),
+        code_cid: Cid::new_v1(RAW, Identity.digest(b"fil/2/paymentchannel")),
         constructor_params: serialized_constructor_params,
     };
 
@@ -1191,7 +1198,7 @@ pub fn get_cid(signed_message_api: SignedMessageAPI) -> Result<String, SignerErr
     let signed_message = SignedMessage::try_from(&signed_message_api)?;
     let cbor_signed_message = to_vec(&signed_message)?;
 
-    let cid = Cid::new_from_cbor(&cbor_signed_message, Blake2b256);
+    let cid = new_from_cbor(&cbor_signed_message, Code::Blake2b256);
 
     Ok(cid.to_string())
 }
